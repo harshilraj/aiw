@@ -2,16 +2,17 @@ import { createAdminSupabase } from "./admin"
 import { isSupabaseAdminConfigured } from "./env"
 
 /**
- * The three paid-service keys students enter via the setup wizard.
- * Stored in app_settings.secrets (jsonb) once entered.
- * Loaded from process.env at startup as a fallback for local dev.
+ * The paid-service keys stored in app_settings.secrets (jsonb) or env vars.
+ * openai_api_key replaces anthropic_api_key as the primary AI key.
  */
 export type SecretName =
-  | "anthropic_api_key"
+  | "openai_api_key"
+  | "anthropic_api_key"   // kept for backward compatibility — not used by the AI layer
   | "apify_api_token"
   | "assemblyai_api_key"
 
 const ENV_FALLBACK: Record<SecretName, string> = {
+  openai_api_key: "OPENAI_API_KEY",
   anthropic_api_key: "ANTHROPIC_API_KEY",
   apify_api_token: "APIFY_API_TOKEN",
   assemblyai_api_key: "ASSEMBLYAI_API_KEY",
@@ -47,7 +48,7 @@ export async function getAllSecretsStatus(): Promise<
   Record<SecretName, { configured: boolean; source: "env" | "db" | null }>
 > {
   const names: SecretName[] = [
-    "anthropic_api_key",
+    "openai_api_key",
     "apify_api_token",
     "assemblyai_api_key",
   ]

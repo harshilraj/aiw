@@ -4,7 +4,8 @@ import { createServerSupabase } from "@/lib/supabase/server"
 import { setSecret, type SecretName } from "@/lib/supabase/secrets"
 
 const schema = z.object({
-  anthropic_api_key: z.string().optional(),
+  openai_api_key: z.string().optional(),
+  anthropic_api_key: z.string().optional(), // kept for backward compat
   apify_api_token: z.string().optional(),
   assemblyai_api_key: z.string().optional(),
 })

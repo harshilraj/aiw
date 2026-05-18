@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk"
+import OpenAI from "openai"
 import { getSecret } from "@/lib/supabase/secrets"
 import {
   buildExpertFrameworkExtractionUserPrompt,
@@ -53,25 +53,30 @@ import type {
   VoiceSignature,
 } from "./types"
 
-const MODEL = "claude-sonnet-4-6"
-const FAST_MODEL = "claude-haiku-4-5-20251001"
+// GPT-4o for heavy generation, GPT-4o-mini for fast/cheap operations.
+const MODEL = "gpt-4o"
+const FAST_MODEL = "gpt-4o-mini"
 const MAX_OUTPUT_TOKENS = 8192
 
-async function getClient(): Promise<Anthropic | null> {
-  const key = await getSecret("anthropic_api_key")
+async function getClient(): Promise<OpenAI | null> {
+  const key = await getSecret("openai_api_key")
   if (!key) return null
-  return new Anthropic({ apiKey: key })
+  return new OpenAI({ apiKey: key })
 }
 
 function priceUsd(input: number, output: number, model: string = MODEL): number {
-  // Sonnet 4.6: $3/M input, $15/M output. Haiku 4.5: $1/M input, $5/M output.
+  // GPT-4o: $2.50/M input, $10/M output. GPT-4o-mini: $0.15/M input, $0.60/M output.
   if (model === FAST_MODEL) {
-    return (input / 1_000_000) * 1 + (output / 1_000_000) * 5
+    return (input / 1_000_000) * 0.15 + (output / 1_000_000) * 0.60
   }
-  return (input / 1_000_000) * 3 + (output / 1_000_000) * 15
+  return (input / 1_000_000) * 2.5 + (output / 1_000_000) * 10
 }
 
-async function callClaudeJson<T>(opts: {
+/**
+ * Core OpenAI call helper — mirrors the Anthropic callClaudeJson shape exactly.
+ * Accepts system + user strings, returns parsed JSON data.
+ */
+async function callOpenAIJson<T>(opts: {
   system: string
   user: string
   maxTokens?: number
@@ -82,20 +87,21 @@ async function callClaudeJson<T>(opts: {
 
   const model = opts.model ?? MODEL
   const t0 = Date.now()
-  const msg = await client.messages.create({
+  const response = await client.chat.completions.create({
     model,
     max_tokens: opts.maxTokens ?? MAX_OUTPUT_TOKENS,
-    system: opts.system,
-    messages: [{ role: "user", content: opts.user }],
+    messages: [
+      { role: "system", content: opts.system },
+      { role: "user", content: opts.user },
+    ],
   })
   const duration_ms = Date.now() - t0
 
-  const block = msg.content[0]
-  const raw = block?.type === "text" ? block.text : ""
+  const raw = response.choices[0]?.message?.content ?? ""
   const data = parseClaudeJson<T>(raw)
 
-  const usage = msg.usage
-  const cost_usd = priceUsd(usage.input_tokens, usage.output_tokens, model)
+  const usage = response.usage
+  const cost_usd = priceUsd(usage?.prompt_tokens ?? 0, usage?.completion_tokens ?? 0, model)
 
   return { data, cost_usd, duration_ms, raw }
 }
@@ -114,18 +120,19 @@ export async function generateIdeas(
       return { data: stubGenerateIdeas(input), mode: "stub" }
     }
     const t0 = Date.now()
-    const msg = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: MODEL,
       max_tokens: 4096,
-      system: IDEATION_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildIdeationUserPrompt(input) }],
+      messages: [
+        { role: "system", content: IDEATION_SYSTEM_PROMPT },
+        { role: "user", content: buildIdeationUserPrompt(input) },
+      ],
     })
     const duration_ms = Date.now() - t0
-    const block = msg.content[0]
-    const raw = block?.type === "text" ? block.text : "[]"
+    const raw = response.choices[0]?.message?.content ?? "[]"
     const parsed = parseClaudeJson<Array<Partial<IdeaProposal>>>(raw)
     const arr = Array.isArray(parsed) ? parsed : [parsed as unknown as Partial<IdeaProposal>]
-    const cost_usd = priceUsd(msg.usage.input_tokens, msg.usage.output_tokens)
+    const cost_usd = priceUsd(response.usage?.prompt_tokens ?? 0, response.usage?.completion_tokens ?? 0)
     return {
       data: arr.map((p, i) => normaliseIdea(p, input.format, i)),
       mode: "real",
@@ -133,7 +140,7 @@ export async function generateIdeas(
       duration_ms,
     }
   } catch (e) {
-    console.error("[claude.generateIdeas] real call failed, falling back to stub:", e)
+    console.error("[ai.generateIdeas] real call failed, falling back to stub:", e)
     return { data: stubGenerateIdeas(input), mode: "stub" }
   }
 }
@@ -177,18 +184,19 @@ export async function generateScripts(
       return { data: stubGenerateScripts(input), mode: "stub" }
     }
     const t0 = Date.now()
-    const msg = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: MODEL,
       max_tokens: MAX_OUTPUT_TOKENS,
-      system: MASTER_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildGeneratorUserPrompt(input) }],
+      messages: [
+        { role: "system", content: MASTER_SYSTEM_PROMPT },
+        { role: "user", content: buildGeneratorUserPrompt(input) },
+      ],
     })
     const duration_ms = Date.now() - t0
-    const block = msg.content[0]
-    const raw = block?.type === "text" ? block.text : "[]"
+    const raw = response.choices[0]?.message?.content ?? "[]"
     const parsed = parseClaudeJson<GeneratedScript[]>(raw)
     const arr = Array.isArray(parsed) ? parsed : [parsed as unknown as GeneratedScript]
-    const cost_usd = priceUsd(msg.usage.input_tokens, msg.usage.output_tokens)
+    const cost_usd = priceUsd(response.usage?.prompt_tokens ?? 0, response.usage?.completion_tokens ?? 0)
     return {
       data: arr.map(normaliseScript),
       mode: "real",
@@ -196,8 +204,7 @@ export async function generateScripts(
       duration_ms,
     }
   } catch (e) {
-    // On real-call failure: fall back to stubs but surface mode='stub' with note
-    console.error("[claude.generateScripts] real call failed, falling back to stub:", e)
+    console.error("[ai.generateScripts] real call failed, falling back to stub:", e)
     return { data: stubGenerateScripts(input), mode: "stub" }
   }
 }
@@ -218,9 +225,6 @@ function normaliseScript(s: GeneratedScript): GeneratedScript {
 
   const fullScript = s.full_script || `${s.hook ?? ""}\n\n${s.body ?? ""}\n\n${s.cta ?? ""}`.trim()
 
-  // Long-form fields (sections, title, total_duration_min) used to be
-  // dropped on the floor. The DB has columns for them; pass them through
-  // so long-form scripts persist their per-section breakdown.
   const sections = Array.isArray(s.sections)
     ? s.sections.filter(
         (sec) =>
@@ -261,13 +265,13 @@ export async function summariseContent(input: {
   title_hint?: string | null
   bucket?: string
 }): Promise<AIResult<ContextSummary>> {
-  const result = await callClaudeJson<ContextSummary>({
+  const result = await callOpenAIJson<ContextSummary>({
     system: SUMMARISE_SYSTEM_PROMPT,
     user: buildSummariseUserPrompt(input),
     maxTokens: 1024,
     model: FAST_MODEL,
   }).catch((e) => {
-    console.error("[claude.summariseContent] failed, falling back:", e)
+    console.error("[ai.summariseContent] failed, falling back:", e)
     return null
   })
 
@@ -289,7 +293,7 @@ export async function summariseContent(input: {
 export async function proposeNiche(
   answers: Record<string, string>
 ): Promise<AIResult<NicheProposal>> {
-  const result = await callClaudeJson<NicheProposal>({
+  const result = await callOpenAIJson<NicheProposal>({
     system: PROPOSE_NICHE_SYSTEM_PROMPT,
     user: buildProposeNicheUserPrompt(answers),
     maxTokens: 1024,
@@ -304,7 +308,7 @@ export async function proposeRadarSeed(input: {
   avatar?: string | null
   offer?: string | null
 }): Promise<AIResult<RadarSeed>> {
-  const result = await callClaudeJson<RadarSeed>({
+  const result = await callOpenAIJson<RadarSeed>({
     system: PROPOSE_RADAR_SEED_SYSTEM_PROMPT,
     user: buildProposeRadarSeedUserPrompt(input),
     maxTokens: 1024,
@@ -318,7 +322,7 @@ export async function proposeExpertBrain(input: {
   niche: string
   avatar?: string | null
 }): Promise<AIResult<ExpertBrainSeed>> {
-  const result = await callClaudeJson<ExpertBrainSeed>({
+  const result = await callOpenAIJson<ExpertBrainSeed>({
     system: PROPOSE_EXPERT_BRAIN_SYSTEM_PROMPT,
     user: buildProposeExpertBrainUserPrompt(input),
     maxTokens: 1024,
@@ -335,7 +339,7 @@ export async function radarSuggestion(input: {
   niche: string
   voice_tone: string
 }): Promise<AIResult<RadarSuggestion>> {
-  const result = await callClaudeJson<RadarSuggestion>({
+  const result = await callOpenAIJson<RadarSuggestion>({
     system: RADAR_SUGGESTION_SYSTEM_PROMPT,
     user: buildRadarSuggestionUserPrompt(input),
     maxTokens: 512,
@@ -360,7 +364,7 @@ export async function postMortem(input: {
   views: number
   median_views: number
 }): Promise<AIResult<PostMortem>> {
-  const result = await callClaudeJson<PostMortem>({
+  const result = await callOpenAIJson<PostMortem>({
     system: POST_MORTEM_SYSTEM_PROMPT,
     user: buildPostMortemUserPrompt(input),
     maxTokens: 512,
@@ -391,19 +395,22 @@ export async function analyseInspirationVideo(input: {
 
   try {
     const t0 = Date.now()
-    const msg = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: FAST_MODEL,
       max_tokens: 1500,
-      system: INSPIRATION_ANALYSIS_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: buildInspirationAnalysisUserPrompt(input) }],
+      messages: [
+        { role: "system", content: INSPIRATION_ANALYSIS_SYSTEM_PROMPT },
+        { role: "user", content: buildInspirationAnalysisUserPrompt(input) },
+      ],
     })
     const duration_ms = Date.now() - t0
-    const block = msg.content[0]
-    const raw = block?.type === "text" ? block.text : "{}"
+    const raw = response.choices[0]?.message?.content ?? "{}"
     const parsed = parseClaudeJson<InspirationAnalysis>(raw)
-    const cost_usd =
-      (msg.usage.input_tokens / 1_000_000) * 1 +
-      (msg.usage.output_tokens / 1_000_000) * 5
+    const cost_usd = priceUsd(
+      response.usage?.prompt_tokens ?? 0,
+      response.usage?.completion_tokens ?? 0,
+      FAST_MODEL
+    )
 
     return {
       data: {
@@ -420,7 +427,7 @@ export async function analyseInspirationVideo(input: {
       duration_ms,
     }
   } catch (e) {
-    console.error("[claude.analyseInspirationVideo] failed:", e)
+    console.error("[ai.analyseInspirationVideo] failed:", e)
     return null
   }
 }
@@ -435,19 +442,18 @@ export async function extractExpertFrameworks(input: {
 
   try {
     const t0 = Date.now()
-    const msg = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: MODEL,
       max_tokens: 4096,
-      system: EXPERT_FRAMEWORK_EXTRACTION_SYSTEM_PROMPT,
       messages: [
+        { role: "system", content: EXPERT_FRAMEWORK_EXTRACTION_SYSTEM_PROMPT },
         { role: "user", content: buildExpertFrameworkExtractionUserPrompt(input) },
       ],
     })
     const duration_ms = Date.now() - t0
-    const block = msg.content[0]
-    const raw = block?.type === "text" ? block.text : "{}"
+    const raw = response.choices[0]?.message?.content ?? "{}"
     const parsed = parseClaudeJson<Partial<ExpertFrameworks>>(raw)
-    const cost_usd = priceUsd(msg.usage.input_tokens, msg.usage.output_tokens)
+    const cost_usd = priceUsd(response.usage?.prompt_tokens ?? 0, response.usage?.completion_tokens ?? 0)
     return {
       data: {
         frameworks: Array.isArray(parsed.frameworks)
@@ -479,18 +485,11 @@ export async function extractExpertFrameworks(input: {
       duration_ms,
     }
   } catch (e) {
-    console.error("[claude.extractExpertFrameworks] failed:", e)
+    console.error("[ai.extractExpertFrameworks] failed:", e)
     return null
   }
 }
 
-/**
- * Pull a structured voice signature out of a my_voice transcript: cadence,
- * opening / closing patterns, profanity level, signature phrases, distinctive
- * verbal moves. Stored at metadata.voice_signature on the context_item and
- * surfaced by the generator alongside the raw transcript so Claude has both
- * the rule and the reference material when matching voice.
- */
 export async function extractVoiceSignature(input: {
   title: string | null
   source_type: string
@@ -501,19 +500,18 @@ export async function extractVoiceSignature(input: {
 
   try {
     const t0 = Date.now()
-    const msg = await client.messages.create({
+    const response = await client.chat.completions.create({
       model: MODEL,
       max_tokens: 2048,
-      system: VOICE_SIGNATURE_EXTRACTION_SYSTEM_PROMPT,
       messages: [
+        { role: "system", content: VOICE_SIGNATURE_EXTRACTION_SYSTEM_PROMPT },
         { role: "user", content: buildVoiceSignatureExtractionUserPrompt(input) },
       ],
     })
     const duration_ms = Date.now() - t0
-    const block = msg.content[0]
-    const raw = block?.type === "text" ? block.text : "{}"
+    const raw = response.choices[0]?.message?.content ?? "{}"
     const parsed = parseClaudeJson<Partial<VoiceSignature>>(raw)
-    const cost_usd = priceUsd(msg.usage.input_tokens, msg.usage.output_tokens)
+    const cost_usd = priceUsd(response.usage?.prompt_tokens ?? 0, response.usage?.completion_tokens ?? 0)
 
     const profanityLevels: VoiceSignature["profanity_level"][] = [
       "none",
@@ -561,11 +559,12 @@ export async function extractVoiceSignature(input: {
       duration_ms,
     }
   } catch (e) {
-    console.error("[claude.extractVoiceSignature] failed:", e)
+    console.error("[ai.extractVoiceSignature] failed:", e)
     return null
   }
 }
 
+/** Named isClaudeConfigured for backward compatibility with all callers */
 export async function isClaudeConfigured(): Promise<boolean> {
-  return Boolean(await getSecret("anthropic_api_key"))
+  return Boolean(await getSecret("openai_api_key"))
 }
