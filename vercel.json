@@ -16,17 +16,5 @@
       "path": "/api/cron/recover-stuck",
       "schedule": "0 7 * * *"
     }
-  ],
-  "functions": {
-    "content-engine/src/app/api/context/upload/route.ts": { "maxDuration": 300 },
-    "content-engine/src/app/api/context/route.ts": { "maxDuration": 300 },
-    "content-engine/src/app/api/setup/propose-expert/route.ts": { "maxDuration": 300 },
-    "content-engine/src/app/api/cron/radar/route.ts": { "maxDuration": 300 },
-    "content-engine/src/app/api/cron/performance/route.ts": { "maxDuration": 300 },
-    "content-engine/src/app/api/cron/recover-stuck/route.ts": { "maxDuration": 300 },
-    "content-engine/src/app/api/generate/route.ts": { "maxDuration": 120 },
-    "content-engine/src/app/api/webhooks/apify/route.ts": { "maxDuration": 300 },
-    "content-engine/src/app/api/radar/scan/route.ts": { "maxDuration": 300 },
-    "content-engine/src/app/api/webhooks/assemblyai/route.ts": { "maxDuration": 60 }
-  }
+  ]
 }
