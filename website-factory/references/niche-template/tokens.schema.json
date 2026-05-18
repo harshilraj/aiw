@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "./tokens.schema.json",
+  "title": "Niche design tokens",
+  "description": "Output of tools/extract-niche-design-tokens.py. Consumed by tools/scaffold-niche-template.py to stamp per-niche tailwind config and brand-dna.js values.",
+  "type": "object",
+  "required": ["niche_slug", "palette", "typography", "motion", "theme_mode"],
+  "additionalProperties": true,
+  "properties": {
+    "niche_slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "extractedAt": { "type": "string", "format": "date-time" },
+    "winner": { "type": ["string", "null"] },
+    "componentSources": {
+      "type": ["object", "null"],
+      "description": "Per-component slug pointers from Module 2D Phase 4 pick.json"
+    },
+    "palette": {
+      "type": "object",
+      "required": ["primary", "accent"],
+      "properties": {
+        "primary": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "primary_dark": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "primary_slate": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "accent": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "accent_light": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "accent_dark": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "neutral": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "neutral_dim": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "silver": { "type": "string", "pattern": "^#[0-9a-f]{6}$" },
+        "ink": { "type": "string", "pattern": "^#[0-9a-f]{6}$" }
+      }
+    },
+    "typography": {
+      "type": "object",
+      "required": ["heading", "body"],
+      "properties": {
+        "heading": { "type": "string", "minLength": 1 },
+        "body": { "type": "string", "minLength": 1 },
+        "headingFontUrl": { "type": "string" },
+        "bodyFontUrl": { "type": "string" }
+      }
+    },
+    "motion": {
+      "type": "object",
+      "required": ["preset"],
+      "properties": {
+        "preset": { "type": "string", "enum": ["restrained", "energetic", "custom"] },
+        "stagger_ms": { "type": "integer", "minimum": 0, "maximum": 500 },
+        "duration_ms": { "type": "integer", "minimum": 0, "maximum": 2000 }
+      }
+    },
+    "theme_mode": { "type": "string", "enum": ["light", "dark"] },
+    "shape_motif": { "type": "string" },
+    "sources": { "type": "object" }
+  }
+}

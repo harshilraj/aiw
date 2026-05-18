@@ -1,0 +1,5 @@
+{
+  "$comment": "Template registry. The factory's build agents read this to pick which template to clone per client. Default is the website template (the roofing/contractor template). Per-niche entries override default when client niche-profile.json matches.",
+  "default": "templates/website-template",
+  "byNiche": {}
+}
