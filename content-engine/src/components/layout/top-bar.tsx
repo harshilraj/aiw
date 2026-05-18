@@ -8,6 +8,8 @@ import {
   MessageSquare,
   Kanban,
   Radar,
+  FlaskConical,
+  Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -77,6 +79,8 @@ export function TopBar({
 
       <div className="flex items-center gap-2">
         <NavLink href="/dashboard" label="Dashboard" active={pathname === "/dashboard"} />
+        <NavLink href="/research" label="Research" active={pathname.startsWith("/research")} icon={<FlaskConical className="h-3.5 w-3.5" />} />
+        <NavLink href="/clients" label="Clients" active={pathname.startsWith("/clients")} icon={<Users className="h-3.5 w-3.5" />} />
         {userEmail ? (
           <span className="hidden text-caption text-[color:var(--color-muted)] md:inline">
             {userEmail}
@@ -130,21 +134,24 @@ function NavLink({
   href,
   label,
   active,
+  icon,
 }: {
   href: string
   label: string
   active?: boolean
+  icon?: React.ReactNode
 }) {
   return (
     <Link
       href={href}
       className={cn(
-        "rounded-md px-2.5 py-1 text-label transition-colors",
+        "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-label transition-colors",
         active
           ? "bg-[color:var(--color-surface)] text-[color:var(--color-foreground)]"
           : "text-[color:var(--color-secondary)] hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-foreground)]"
       )}
     >
+      {icon}
       {label}
     </Link>
   )
