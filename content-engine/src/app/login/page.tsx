@@ -1,5 +1,4 @@
 import { Suspense } from "react"
-import Image from "next/image"
 import { redirect } from "next/navigation"
 import { isSupabaseConfigured, isSupabaseAdminConfigured } from "@/lib/supabase/env"
 import { createAdminSupabase } from "@/lib/supabase/admin"
@@ -39,17 +38,13 @@ export default async function LoginPage({
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-16">
       <div className="flex flex-col items-center text-center">
-        <Image
-          src="/aiw-logo.png"
-          alt="AIW"
-          width={72}
-          height={72}
-          priority
-        />
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[color:var(--color-accent)] text-black font-bold text-2xl">
+          L
+        </div>
         <p className="mt-4 text-caption uppercase tracking-[0.24em] text-[color:var(--color-muted)]">
-          AIW Content Engine
+          Livo Content Engine
         </p>
-        <h1 className="aiw-wordmark mt-2 text-display text-[color:var(--color-foreground)]">
+        <h1 className="livo-wordmark mt-2 text-display text-[color:var(--color-foreground)]">
           {mode === "sign-up" ? "Claim this instance" : "Sign in"}
         </h1>
         <p className="mt-2 text-body text-[color:var(--color-secondary)]">

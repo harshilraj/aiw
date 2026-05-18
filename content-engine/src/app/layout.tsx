@@ -3,27 +3,27 @@ import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "AIW Content Engine",
+  title: "Livo Content Engine",
   description:
     "Reels, carousels, stories, and long-form scripts written in your voice — anchored to your business, frameworks, and feedback.",
   icons: {
     icon: [
-      { url: "/aiw-logo.png", type: "image/png" },
+      { url: "/livo-logo.png", type: "image/png" },
     ],
-    shortcut: "/aiw-logo.png",
-    apple: "/aiw-logo.png",
+    shortcut: "/livo-logo.png",
+    apple: "/livo-logo.png",
   },
   openGraph: {
-    title: "AIW Content Engine",
+    title: "Livo Content Engine",
     description: "Original scripts in your voice, every time.",
-    images: ["/aiw-logo.png"],
+    images: ["/livo-logo.png"],
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "AIW Content Engine",
+    title: "Livo Content Engine",
     description: "Original scripts in your voice, every time.",
-    images: ["/aiw-logo.png"],
+    images: ["/livo-logo.png"],
   },
 }
 

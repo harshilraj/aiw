@@ -80,7 +80,7 @@ export function Workspace({
   // Persist the chat turn list locally so generated previews survive a
   // refresh. Capped to the last 30 turns; key suffix bumps invalidate
   // older entries when ChatItem shape changes.
-  const STORAGE_KEY = "aiw:workspace:items:v2"
+  const STORAGE_KEY = "livo:workspace:items:v2"
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
@@ -409,7 +409,7 @@ export function Workspace({
           <main className="flex flex-1 flex-col overflow-hidden">
             {demoMode ? (
               <div className="border-b border-[color:var(--color-border)] bg-[color:var(--color-accent-soft)] px-4 py-2 text-caption text-[color:var(--color-accent)]">
-                Demo mode — connect Anthropic, Apify, and AssemblyAI keys in Settings to flip on real generation.
+                Demo mode — connect OpenAI, Apify, and AssemblyAI keys in Settings to flip on real generation.
               </div>
             ) : null}
 

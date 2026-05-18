@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   Settings as SettingsIcon,
@@ -42,17 +41,12 @@ export function TopBar({
             <Menu className="h-4 w-4" />
           </Button>
         ) : null}
-        <Link href="/" className="flex items-center gap-2.5" aria-label="AIW Content Engine home">
-          <Image
-            src="/aiw-sparkle.png"
-            alt="AIW"
-            width={56}
-            height={56}
-            priority
-            className="shrink-0"
-          />
+        <Link href="/" className="flex items-center gap-2.5" aria-label="Livo Content Engine home">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color:var(--color-accent)] text-black font-bold text-sm">
+            L
+          </span>
           <span className="text-h2 font-bold italic uppercase tracking-wider text-[color:var(--color-foreground)]">
-            Content Engine
+            Livo
           </span>
         </Link>
 

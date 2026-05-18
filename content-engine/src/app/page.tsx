@@ -19,7 +19,7 @@ export default async function Home() {
   } = await supabase.auth.getUser()
   if (!user) return <NotConfiguredScreen />
 
-  const anthropicSet = envFlag("ANTHROPIC_API_KEY")
+  const anthropicSet = envFlag("OPENAI_API_KEY")
   const apifySet = envFlag("APIFY_API_TOKEN")
   const assemblySet = envFlag("ASSEMBLYAI_API_KEY")
 
@@ -60,7 +60,7 @@ function NotConfiguredScreen() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-10 px-6 py-16">
       <header className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--color-muted)]">AIW</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-[color:var(--color-muted)]">Livo</p>
         <h1 className="text-3xl font-semibold tracking-tight">Content Engine</h1>
         <p className="text-sm text-[color:var(--color-secondary)]">
           Instagram reels, carousels, and story sequences produced in your voice.

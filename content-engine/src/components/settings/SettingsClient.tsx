@@ -85,7 +85,7 @@ export function SettingsClient() {
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-6 py-10">
       <header className="space-y-1">
-        <h1 className="aiw-wordmark text-display text-[color:var(--color-foreground)]">Settings</h1>
+        <h1 className="livo-wordmark text-display text-[color:var(--color-foreground)]">Settings</h1>
         <p className="text-sm text-[color:var(--color-secondary)]">
           API keys, business profile, voice profile.
         </p>
@@ -127,7 +127,7 @@ function ApiKeysCard({
   secrets: Record<string, SecretStatus>
   onChange: (s: Record<string, SecretStatus>) => void
 }) {
-  const [a, setA] = useState("")
+  const [o, setO] = useState("")
   const [p, setP] = useState("")
   const [as, setAs] = useState("")
   const [busy, setBusy] = useState(false)
@@ -139,7 +139,7 @@ function ApiKeysCard({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          anthropic_api_key: a || undefined,
+          openai_api_key: o || undefined,
           apify_api_token: p || undefined,
           assemblyai_api_key: as || undefined,
         }),
@@ -149,7 +149,7 @@ function ApiKeysCard({
       const stateRes = await fetch("/api/setup/state")
       const json = await stateRes.json().catch(() => null)
       if (json?.secrets) onChange(json.secrets)
-      setA("")
+      setO("")
       setP("")
       setAs("")
     } catch (e) {
@@ -167,10 +167,10 @@ function ApiKeysCard({
           <CardDescription className="m-0">Stored in Supabase, encrypted via service role.</CardDescription>
         </div>
         <KeyRow
-          label="Anthropic"
-          value={a}
-          onChange={setA}
-          status={secrets.anthropic_api_key}
+          label="OpenAI"
+          value={o}
+          onChange={setO}
+          status={secrets.openai_api_key}
         />
         <KeyRow label="Apify" value={p} onChange={setP} status={secrets.apify_api_token} />
         <KeyRow
@@ -180,7 +180,7 @@ function ApiKeysCard({
           status={secrets.assemblyai_api_key}
         />
         <div className="flex justify-end">
-          <Button onClick={save} disabled={busy || (!a && !p && !as)}>
+          <Button onClick={save} disabled={busy || (!o && !p && !as)}>
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             {busy ? "Saving..." : "Save keys"}
           </Button>
