@@ -404,7 +404,7 @@ function ModuleCard({
       )}
 
       {/* Output — shown when complete and expanded */}
-      {isComplete && expanded && output && (
+      {isComplete && expanded && !!output && (
         <div className="border-t border-[color:var(--color-border)] px-5 py-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-caption uppercase tracking-[0.16em] text-[color:var(--color-muted)]">Output</span>

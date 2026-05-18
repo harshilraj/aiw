@@ -18,7 +18,7 @@ const runSchema = z.object({
 // System prompts per module (condensed but complete)
 // ─────────────────────────────────────────────────────────
 
-const MODULE_PROMPTS: Record<number, { system: string; outputKey: string }> = {
+const MODULE_PROMPTS: Record<number, { system: string; outputKey: string | null }> = {
   1: {
     outputKey: "student_profile",
     system: `You are a niche-discovery interviewer. Based on the answers provided, produce a complete Student Profile with these sections:

@@ -13,14 +13,14 @@ const patchSchema = z.object({
   notes: z.string().optional(),
 })
 
-type Params = { params: Promise<{ client_id: string }> }
+type Params = { params: Promise<{ id: string }> }
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const supabase = await createServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { client_id } = await params
+  const { id: client_id } = await params
   if (!isSupabaseAdminConfigured()) return NextResponse.json({ error: "Admin not configured" }, { status: 500 })
 
   const admin = createAdminSupabase()
@@ -39,7 +39,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-  const { client_id } = await params
+  const { id: client_id } = await params
   if (!isSupabaseAdminConfigured()) return NextResponse.json({ error: "Admin not configured" }, { status: 500 })
 
   const body = await req.json()
