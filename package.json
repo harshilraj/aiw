@@ -1,0 +1,14 @@
+{
+  "name": "aiw-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "content-engine"
+  ],
+  "scripts": {
+    "build": "npm run build --prefix content-engine",
+    "dev": "npm run dev --prefix content-engine",
+    "lint": "npm run lint --prefix content-engine",
+    "typecheck": "npm run typecheck --prefix content-engine"
+  }
+}
