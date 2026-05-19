@@ -1,10 +1,10 @@
-# AIW 2.0 Stack
+# Livo Stack
 
-A complete client-onboarding system for AIW students. Clone once. Run the commands. Ship.
+A complete client-onboarding system
 
 ## What this stack does
 
-You clone this repo. You run a guided onboarding inside Claude Code. By the end you have:
+You clone this repo. By the end you have:
 
 1. A niche you have evidence to commit to.
 2. A productized offer with cold-DM copy ready to send.
