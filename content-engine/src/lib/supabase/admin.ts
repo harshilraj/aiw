@@ -13,7 +13,8 @@ import {
 export function createAdminSupabase() {
   if (!isSupabaseAdminConfigured()) {
     throw new Error(
-      "Supabase admin not configured. Add SUPABASE_SERVICE_ROLE_KEY to your .env.local."
+      "Supabase admin not configured. Set SUPABASE_SERVICE_ROLE_KEY " +
+      "in your Vercel project environment variables or in .env.local for local development."
     )
   }
   return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {

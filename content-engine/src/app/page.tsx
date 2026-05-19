@@ -71,7 +71,7 @@ function NotConfiguredScreen() {
         <h2 className="text-sm font-medium">Setup status</h2>
         <p className="mt-1 text-xs text-[color:var(--color-secondary)]">
           {missing.length > 0
-            ? "Add these env vars to .env.local then restart the dev server."
+            ? "Set these in your Vercel project → Settings → Environment Variables (for production) or in .env.local (for local dev)."
             : "Sign in to start working."}
         </p>
         <ul className="mt-4 space-y-2 text-sm">

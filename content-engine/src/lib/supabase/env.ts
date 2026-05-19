@@ -18,7 +18,9 @@ export function isSupabaseAdminConfigured(): boolean {
 export function assertSupabase(): void {
   if (!isSupabaseConfigured()) {
     throw new Error(
-      "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local."
+      "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY " +
+      "in your Vercel project environment variables (Production/Preview/Development) " +
+      "or in .env.local for local development."
     )
   }
 }
